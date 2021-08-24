@@ -40,12 +40,6 @@ def get_user(username, password):
         return cursor.fetchall()
 
 
-users = fetch_users()
-
-username_table = {u.username: u for u in users}
-userid_table = {u.id: u for u in users}
-
-
 # Authentication
 def authenticate(username, password):
     user = username_table.get(username, None)
@@ -84,16 +78,26 @@ def init_book_table():
     conn = sqlite3.connect('database.db')
     print('Database opened successfully')
 
-    conn.execute("CREATE TABLE IF NOT EXISTS product(product_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    conn.execute("CREATE TABLE IF NOT EXISTS book("
+                 "book_id INTEGER PRIMARY KEY AUTOINCREMENT,"
                  "name TEXT NOT NULL,"
                  "price TEXT NOT NULL,"
-                 "format TEXT NOT NULL")
+                 "format TEXT NOT NULL)")
     print("book table created successfully")
     conn.close()
 
 
 init_user_table()
 init_book_table()
+
+
+
+users = fetch_users()
+
+username_table = {u.username: u for u in users}
+userid_table = {u.id: u for u in users}
+
+
 # Email
 app = Flask(__name__)
 app.debug = True
