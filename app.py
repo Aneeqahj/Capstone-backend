@@ -168,10 +168,14 @@ def user_registration():
                 with sqlite3.connect("database.db") as connection:
                     cursor = connection.cursor()
                     cursor.execute("INSERT INTO user("
+                                   "email,"
                                    "full_name,"
                                    "username,"
-                                   "password) VALUES(?, ?, ?)", (email, full_name, username, password))
+                                   "password) VALUES(?, ?, ?, ?)", (email, full_name, username, password))
                     connection.commit()
+
+                    global users
+                    users = fetch_users()
 
                     #   SEND THE USER AN EMAIL INFORMING THEM ABOUT THEIR REGISTRATION
                     msg = Message('Success', sender='aneeqahlotto@gmail.com', recipients=[email])
@@ -179,6 +183,7 @@ def user_registration():
                     msg.body = "Your registration was successful."
                     mail.send(msg)
                     response["description"] = "Message sent"
+
                 #   GET THE NEWLY REGISTERED USER
                 user = get_user(username, password)
                 #   UPDATE THE response
@@ -186,7 +191,8 @@ def user_registration():
                 response["current_user"] = user
                 response["message"] = "registration successful"
                 response["email_status"] = "Email was successfully sent"
-    except ValueError:
+    except Exception as e:
+        print(e.message)
         #   UPDATE THE response
         response["status_code"] = 409
         response["current_user"] = "none"
@@ -230,7 +236,7 @@ def add_books():
 
 
 # creating a route to view books
-@app.route('/view/', methods=['GET'])
+@app.route('/viewing/', methods=['GET'])
 def view_books():
     try:
         response = {}
@@ -297,7 +303,7 @@ def update_book(book_id):
                     put_data["price"] = incoming_data.get("price")
                     with sqlite3.connect('database.db') as conn:
                         cursor = conn.cursor()
-                        cursor.execute("UPDATE product SET price =? WHERE book_id=?",
+                        cursor.execute("UPDATE book SET price =? WHERE book_id=?",
                                        (put_data["price"], book_id))
                         conn.commit()
                         response['message'] = "Update was successful"
@@ -360,22 +366,25 @@ def add_review():
         response = {}
 
         if request.method == "POST":
-            review_id = request.json['review_id']
             review = request.json['review']
-            date = request.json['date']
             book_id = request.json['book_id']
+            user_id = request.json['user_id']
 
             today = date.today()
             date_reviewed = today.strftime('%B %d, %Y')
 
             with sqlite3.connect("database.db") as connection:
                 cursor = connection.cursor()
+                "user_id INTEGER NULL,"
+                "review TEXT NOT NULL,"
+                "date TEXT NOT NULL,"
+                "book_id INTEGER NOT NULL,"
                 cursor.execute("INSERT INTO review("
-                               "review_id,"
+                               "user_id, "
                                "review,"
                                "date,"
                                "book_id"
-                               ") VALUES(?, ?, ?, ?)", (review_id, review, date, book_id))
+                               ") VALUES(?, ?, ?, ?)", (user_id, review, date_reviewed, book_id))
                 connection.commit()
                 response["message"] = "success"
                 response["status_code"] = 201
