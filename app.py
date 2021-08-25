@@ -1,7 +1,7 @@
 #  All Imports
 import hmac
 import sqlite3
-from datetime import timedelta
+from datetime import timedelta, date
 
 from flask_cors import CORS
 from flask import Flask, request, jsonify
@@ -58,22 +58,48 @@ def init_user_table():
     conn = sqlite3.connect('database.db')
     print('Database opened successfully')
 
-    conn.execute("CREATE TABLE IF NOT EXISTS user(user_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    conn.execute("CREATE TABLE IF NOT EXISTS user("
+                 "user_id INTEGER PRIMARY KEY AUTOINCREMENT,"
                  "full_name TEXT NOT NULL,"
+                 "email TEXT NOT NULL,"
                  "username TEXT NOT NULL,"
                  "password TEXT NOT NULL)")
     print("user table created successfully")
 
 
+class Review(object):
+    def __init__(self, review_id, review, date, book_id):
+        self.review_id = review_id
+        self.review = review
+        self.date = date
+        self.book_id = book_id
+
+
+# creating a  Database for reviews
+def init_review_table():
+    conn = sqlite3.connect('database.db')
+    print('Database opened successfully')
+
+    conn.execute("CREATE TABLE IF NOT EXISTS review(review_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                 "user_id INTEGER NULL,"
+                 "review TEXT NOT NULL,"
+                 "date TEXT NOT NULL,"
+                 "book_id INTEGER NOT NULL,"
+                 "FOREIGN KEY (user_id) REFERENCES user(user_id),"
+                 "FOREIGN KEY (book_id) REFERENCES book(book_id))")
+    print("user table created successfully")
+
+
 class Book(object):
-    def __init__(self, id, name, price, format):
+    def __init__(self, id, name, price, format, synopsis):
         self.id = id
         self.name = name
         self.price = price
         self.format = format
+        self.synopsis = synopsis
 
 
-# Creating a database for products
+# Creating a database for books
 def init_book_table():
     conn = sqlite3.connect('database.db')
     print('Database opened successfully')
@@ -82,21 +108,20 @@ def init_book_table():
                  "book_id INTEGER PRIMARY KEY AUTOINCREMENT,"
                  "name TEXT NOT NULL,"
                  "price TEXT NOT NULL,"
-                 "format TEXT NOT NULL)")
+                 "format TEXT NOT NULL,"
+                 "synopsis TEXT NOT NULL)")
     print("book table created successfully")
     conn.close()
 
 
 init_user_table()
 init_book_table()
-
-
+init_review_table()
 
 users = fetch_users()
 
 username_table = {u.username: u for u in users}
 userid_table = {u.id: u for u in users}
-
 
 # Email
 app = Flask(__name__)
@@ -148,7 +173,7 @@ def user_registration():
                                    "password) VALUES(?, ?, ?)", (email, full_name, username, password))
                     connection.commit()
 
-                #   SEND THE USER AN EMAIL INFORMING THEM ABOUT THEIR REGISTRATION
+                    #   SEND THE USER AN EMAIL INFORMING THEM ABOUT THEIR REGISTRATION
                     msg = Message('Success', sender='aneeqahlotto@gmail.com', recipients=[email])
                     response["user"] = user
                     msg.body = "Your registration was successful."
@@ -172,7 +197,7 @@ def user_registration():
         return response
 
 
-# creating a route for adding a product
+# creating a route for adding a books
 @app.route('/adding/', methods=['POST'])
 # @jwt_required()
 def add_books():
@@ -183,14 +208,16 @@ def add_books():
             name = request.json['name']
             price = request.json['price']
             format = request.json['format']
+            synopsis = request.json['synopsis']
 
             with sqlite3.connect("database.db") as connection:
                 cursor = connection.cursor()
                 cursor.execute("INSERT INTO book("
                                "name,"
                                "price,"
-                               "format"
-                               ") VALUES(?, ?, ?)", (name, price, format))
+                               "format,"
+                               "synopsis"
+                               ") VALUES(?, ?, ?, ?)", (name, price, format, synopsis))
                 connection.commit()
                 response["message"] = "success"
                 response["status_code"] = 201
@@ -202,7 +229,7 @@ def add_books():
         return response
 
 
-# creating a route to view products
+# creating a route to view books
 @app.route('/view/', methods=['GET'])
 def view_books():
     try:
@@ -222,3 +249,248 @@ def view_books():
         response["description"] = Exception
 
         return response
+
+
+@app.route('/view-one/<int:book_id>/', methods=['GET'])
+def view_book(book_id):
+    try:
+        response = {}
+
+        with sqlite3.connect("database.db") as connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT * FROM book WHERE book_id=?", str(book_id))
+            products = cursor.fetchall()
+
+        response['status_code'] = 200
+        response['data'] = products
+        return response
+    except:
+        response["message"] = "Enter correct details"
+        response["description"] = Exception
+
+        return response
+
+
+# creating a route to update books
+@app.route('/update/<int:book_id>/', methods=['PUT'])
+# @jwt_required()
+def update_book(book_id):
+    try:
+        response = {}
+
+        if request.method == "PUT":
+            with sqlite3.connect('database.db') as conn:
+                print(request.json)
+                incoming_data = dict(request.json)
+                put_data = {}
+
+                if incoming_data.get("name") is not None:
+                    put_data["name"] = incoming_data.get("name")
+                    with sqlite3.connect('database.db') as conn:
+                        cursor = conn.cursor()
+                        cursor.execute("UPDATE book SET name =? WHERE book_id=?", (put_data["name"], book_id))
+                        conn.commit()
+                        response['message'] = "Update was successful"
+                        response['status_code'] = 200
+
+                elif incoming_data.get("price") is not None:
+                    put_data["price"] = incoming_data.get("price")
+                    with sqlite3.connect('database.db') as conn:
+                        cursor = conn.cursor()
+                        cursor.execute("UPDATE product SET price =? WHERE book_id=?",
+                                       (put_data["price"], book_id))
+                        conn.commit()
+                        response['message'] = "Update was successful"
+                        response['status_code'] = 200
+
+                elif incoming_data.get("format") is not None:
+                    put_data["format"] = incoming_data.get("format")
+                    with sqlite3.connect('database.db') as conn:
+                        cursor = conn.cursor()
+                        cursor.execute("UPDATE book SET category =? WHERE book_id=?", (put_data["book"],
+                                                                                       book_id))
+                        conn.commit()
+                        response['message'] = "Update was successful"
+                        response['status_code'] = 200
+
+                elif incoming_data.get("synopsis") is not None:
+                    put_data["synopsis"] = incoming_data.get("synopsis")
+                    with sqlite3.connect('database.db') as conn:
+                        cursor = conn.cursor()
+                        cursor.execute("UPDATE book SET synopsis =? WHERE book_id=?", (put_data["synopsis"],
+                                                                                       book_id))
+                        conn.commit()
+                        response['message'] = "Update was successful"
+                        response['status_code'] = 200
+                return response
+    except:
+        response["message"] = "Enter correct details"
+        response["description"] = Exception
+
+        return response
+
+
+# creating a route to delete books
+@app.route('/delete_book/<int:book_id>/')
+# @jwt_required()
+def delete_book(book_id):
+    try:
+        response = {}
+
+        with sqlite3.connect("database.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM book WHERE book_id=" + str(book_id))
+            conn.commit()
+            response['status_code'] = 200
+            response['message'] = "book deleted successfully."
+        return response
+    except:
+        response["message"] = "Enter correct details"
+        response["description"] = Exception
+
+        return response
+
+
+# REVIEW TABLE FUNCTIONS
+# creating a route for adding reviews
+@app.route('/add/', methods=['POST'])
+# @jwt_required()
+def add_review():
+    try:
+        response = {}
+
+        if request.method == "POST":
+            review_id = request.json['review_id']
+            review = request.json['review']
+            date = request.json['date']
+            book_id = request.json['book_id']
+
+            today = date.today()
+            date_reviewed = today.strftime('%B %d, %Y')
+
+            with sqlite3.connect("database.db") as connection:
+                cursor = connection.cursor()
+                cursor.execute("INSERT INTO review("
+                               "review_id,"
+                               "review,"
+                               "date,"
+                               "book_id"
+                               ") VALUES(?, ?, ?, ?)", (review_id, review, date, book_id))
+                connection.commit()
+                response["message"] = "success"
+                response["status_code"] = 201
+            return response
+    except:
+        response["message"] = "Enter correct details"
+        response["description"] = Exception
+
+        return response
+
+
+# creating a route to view reviews
+@app.route('/view/', methods=['GET'])
+def view_reviews():
+    try:
+        response = {}
+
+        with sqlite3.connect("database.db") as connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT * FROM review")
+
+            products = cursor.fetchall()
+
+        response['status_code'] = 200
+        response['data'] = products
+        return jsonify(response)
+    except:
+        response["message"] = "Enter correct details"
+        response["description"] = Exception
+
+        return response
+
+
+@app.route('/view-one/<int:review_id>/', methods=['GET'])
+def view_review(review_id):
+    try:
+        response = {}
+
+        with sqlite3.connect("database.db") as connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT * FROM review WHERE review_id=?", str(review_id))
+            products = cursor.fetchall()
+
+        response['status_code'] = 200
+        response['data'] = products
+        return response
+    except:
+        response["message"] = "Enter correct details"
+        response["description"] = Exception
+
+        return response
+
+
+# creating a route to delete reviews
+@app.route('/delete_review/<int:review_id>/')
+# @jwt_required()
+def delete_review(review_id):
+    try:
+        response = {}
+
+        with sqlite3.connect("database.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM review WHERE review_id=" + str(review_id))
+            conn.commit()
+            response['status_code'] = 200
+            response['message'] = "book deleted successfully."
+        return response
+    except:
+        response["message"] = "Enter correct details"
+        response["description"] = Exception
+
+        return response
+
+
+# USER DETAILS
+@app.route('/view_user/<int:user_id>/', methods=['GET'])
+def view_user(user_id):
+    try:
+        response = {}
+
+        with sqlite3.connect("database.db") as connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT * FROM user WHERE user_id=?", str(user_id))
+            user = cursor.fetchall()
+
+        response['status_code'] = 200
+        response['data'] = user
+        return response
+    except:
+        response["message"] = "Enter correct details"
+        response["description"] = Exception
+
+        return response
+
+
+@app.route('/delete_user/<int:user_id>/')
+# @jwt_required()
+def delete_user(user_id):
+    try:
+        response = {}
+
+        with sqlite3.connect("database.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM user WHERE user_id=" + str(user_id))
+            conn.commit()
+            response['status_code'] = 200
+            response['message'] = "user deleted successfully."
+        return response
+    except:
+        response["message"] = "Enter correct details"
+        response["description"] = Exception
+
+        return response
+
+
+if __name__ == "__main__":
+    app.run()
+    app.debug = True
