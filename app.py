@@ -28,7 +28,9 @@ def fetch_users():
 
         for data in users:
             print(data)
-            new_data.append(User(data[0], data[2], data[3]))
+            print(data[3])
+            print(data[4])
+            new_data.append(User(data[0], data[3], data[4]))
     return new_data
 
 
@@ -132,7 +134,9 @@ app.config['MAIL_USERNAME'] = 'aneeqahlotto@gmail.com'
 app.config['MAIL_PASSWORD'] = 'lotto2021'
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
+
 mail = Mail(app)
+
 app.config['JWT_EXPIRATION_DELTA'] = timedelta(seconds=86400)
 app.config['SECRET_KEY'] = 'super-secret'
 CORS(app)
@@ -176,16 +180,24 @@ def user_registration():
 
                     global users
                     users = fetch_users()
+                    print(users)
 
                     #   SEND THE USER AN EMAIL INFORMING THEM ABOUT THEIR REGISTRATION
-                    msg = Message('Success', sender='aneeqahlotto@gmail.com', recipients=[email])
-                    response["user"] = user
-                    msg.body = "Your registration was successful."
-                    mail.send(msg)
+                    # msg = Message('Success', sender='aneeqahlotto@gmail.com', recipients=[email])
+                    # msg.body = "Your registration was successful."
+                    # mail.send(msg)
+                    email_to_send = Message('Welcome to the Radical Store.', sender='aneeqahlotto@gmail.com',
+                                            recipients=[email])
+                    email_to_send.body = f"Congratulations {full_name} on a successful registration. \n\n" \
+                                         f"Welcome to the Only books family, browse around and make sure to enjoy the " \
+                                         f"experience. "
+
+                    mail.send(email_to_send)
                     response["description"] = "Message sent"
 
                 #   GET THE NEWLY REGISTERED USER
                 user = get_user(username, password)
+                print(user)
                 #   UPDATE THE response
                 response["status_code"] = 201
                 response["current_user"] = user
@@ -205,7 +217,7 @@ def user_registration():
 
 # creating a route for adding a books
 @app.route('/adding/', methods=['POST'])
-# @jwt_required()
+@jwt_required()
 def add_books():
     try:
         response = {}
@@ -279,7 +291,7 @@ def view_book(book_id):
 
 # creating a route to update books
 @app.route('/update/<int:book_id>/', methods=['PUT'])
-# @jwt_required()
+@jwt_required()
 def update_book(book_id):
     try:
         response = {}
@@ -338,7 +350,7 @@ def update_book(book_id):
 
 # creating a route to delete books
 @app.route('/delete_book/<int:book_id>/')
-# @jwt_required()
+@jwt_required()
 def delete_book(book_id):
     try:
         response = {}
@@ -360,7 +372,7 @@ def delete_book(book_id):
 # REVIEW TABLE FUNCTIONS
 # creating a route for adding reviews
 @app.route('/add/', methods=['POST'])
-# @jwt_required()
+@jwt_required()
 def add_review():
     try:
         response = {}
@@ -418,7 +430,7 @@ def view_reviews():
         return response
 
 
-@app.route('/view-one/<int:review_id>/', methods=['GET'])
+@app.route('/view_one/<int:review_id>/', methods=['GET'])
 def view_review(review_id):
     try:
         response = {}
@@ -440,7 +452,7 @@ def view_review(review_id):
 
 # creating a route to delete reviews
 @app.route('/delete_review/<int:review_id>/')
-# @jwt_required()
+@jwt_required()
 def delete_review(review_id):
     try:
         response = {}
@@ -481,7 +493,7 @@ def view_user(user_id):
 
 
 @app.route('/delete_user/<int:user_id>/')
-# @jwt_required()
+@jwt_required()
 def delete_user(user_id):
     try:
         response = {}
