@@ -147,74 +147,99 @@ jwt = JWT(app, authenticate, identity)
 # creating a route for registration
 @app.route('/user-registration/', methods=["POST"])
 def user_registration():
-    #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
     response = {}
 
-    try:
-        #   MAKE SURE THE request.method IS A POST
-        if request.method == "POST":
-            #   GET THE FORM DATA TO BE SAVED
-            email = request.json['email']
-            full_name = request.json['full_name']
-            username = request.json['username']
-            password = request.json['password']
+    if request.method == "POST":
 
-            #   CALL THE get_user FUNCTION TO GET THE user
-            user = get_user(username, password)
-            print(user)
-            #   IF user EXISTS, THEN LOG THE IN
-            if user:
-                response["status_code"] = 409
-                response["message"] = "user already exists"
-                response["email_status"] = "email not sent"
-            else:
-                #   CALL THE register_user FUNCTION TO REGISTER THE USER
-                with sqlite3.connect("database.db") as connection:
-                    cursor = connection.cursor()
-                    cursor.execute("INSERT INTO user("
-                                   "email,"
-                                   "full_name,"
-                                   "username,"
-                                   "password) VALUES(?, ?, ?, ?)", (email, full_name, username, password))
-                    connection.commit()
+        email = request.json['email']
+        full_name = request.json['full_name']
+        username = request.json['username']
+        password = request.json['password']
 
-                global users
-                users = fetch_users()
-                print(users)
-
-                #   SEND THE USER AN EMAIL INFORMING THEM ABOUT THEIR REGISTRATION
-                # msg = Message('Success', sender='aneeqahlotto@gmail.com', recipients=[email])
-                # msg.body = "Your registration was successful."
-                # mail.send(msg)
-                email_to_send = Message('Welcome to the Only Books.', sender='aneeqahlotto@gmail.com',
-                                        recipients=[email])
-                email_to_send.body = f"Congratulations {full_name} on a successful registration. \n\n" \
-                                     f"Welcome to the Only books family, browse around and make sure to enjoy the " \
-                                     f"experience. "
-
-                mail.send(email_to_send)
-                response["description"] = "Message sent"
-
-                #   GET THE NEWLY REGISTERED USER
-                user = get_user(username, password)
-                print(user)
-                #   UPDATE THE response
-                response["status_code"] = 201
-                response["current_user"] = user
-                response["message"] = "registration successful"
-                response["email_status"] = "Email was successfully sent"
-                return response
-    except Exception as e:
-        print(e.message)
-        #   UPDATE THE response
-        response["status_code"] = 409
-        response["current_user"] = "none"
-        response["message"] = "inputs are not valid"
-        response["email_status"] = "email not sent"
-        return response
-    finally:
-        #   RETURN THE response
-        return response
+        with sqlite3.connect("database.db") as connection:
+            cursor = connection.cursor()
+            cursor.execute("INSERT INTO user("
+                           "email,"
+                           "full_name,"
+                           "username,"
+                           "password) VALUES(?, ?, ?, ?)", (email, full_name, username, password))
+            connection.commit()
+            response["message"] = "success"
+            response["status_code"] = 201
+            # Email IF the registration works
+            if response["status_code"] == 201:
+                msg = Message("Hello Message", sender="huntermoonspear@gmail.com", recipients=[email])
+                msg.body = "My email using Flask"
+                mail.send(msg)
+                return "Message sent"
+    # #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
+    # response = {}
+    #
+    # try:
+    #     #   MAKE SURE THE request.method IS A POST
+    #     if request.method == "POST":
+    #         #   GET THE FORM DATA TO BE SAVED
+    #         email = request.json['email']
+    #         full_name = request.json['full_name']
+    #         username = request.json['username']
+    #         password = request.json['password']
+    #
+    #         #   CALL THE get_user FUNCTION TO GET THE user
+    #         user = get_user(username, password)
+    #         print(user)
+    #         #   IF user EXISTS, THEN LOG THE IN
+    #         if user:
+    #             response["status_code"] = 409
+    #             response["message"] = "user already exists"
+    #             response["email_status"] = "email not sent"
+    #         else:
+    #             #   CALL THE register_user FUNCTION TO REGISTER THE USER
+    #             with sqlite3.connect("database.db") as connection:
+    #                 cursor = connection.cursor()
+    #                 cursor.execute("INSERT INTO user("
+    #                                "email,"
+    #                                "full_name,"
+    #                                "username,"
+    #                                "password) VALUES(?, ?, ?, ?)", (email, full_name, username, password))
+    #                 connection.commit()
+    #
+    #             global users
+    #             users = fetch_users()
+    #             print(users)
+    #
+    #             #   SEND THE USER AN EMAIL INFORMING THEM ABOUT THEIR REGISTRATION
+    #             # msg = Message('Success', sender='aneeqahlotto@gmail.com', recipients=[email])
+    #             # msg.body = "Your registration was successful."
+    #             # mail.send(msg)
+    #             email_to_send = Message('Welcome to the Only Books.', sender='aneeqahlotto@gmail.com',
+    #                                     recipients=[email])
+    #             email_to_send.body = f"Congratulations {full_name} on a successful registration. \n\n" \
+    #                                  f"Welcome to the Only books family, browse around and make sure to enjoy the " \
+    #                                  f"experience. "
+    #
+    #             mail.send(email_to_send)
+    #             response["description"] = "Message sent"
+    #
+    #             #   GET THE NEWLY REGISTERED USER
+    #             user = get_user(username, password)
+    #             print(user)
+    #             #   UPDATE THE response
+    #             response["status_code"] = 201
+    #             response["current_user"] = user
+    #             response["message"] = "registration successful"
+    #             response["email_status"] = "Email was successfully sent"
+    #             return response
+    # except Exception as e:
+    #     print(e.message)
+    #     #   UPDATE THE response
+    #     response["status_code"] = 409
+    #     response["current_user"] = "none"
+    #     response["message"] = "inputs are not valid"
+    #     response["email_status"] = "email not sent"
+    #     return response
+    # finally:
+    #     #   RETURN THE response
+    #     return response
 
 
 # creating a route for adding a books
