@@ -186,7 +186,7 @@ def user_registration():
                 # msg = Message('Success', sender='aneeqahlotto@gmail.com', recipients=[email])
                 # msg.body = "Your registration was successful."
                 # mail.send(msg)
-                # email_to_send = Message('Welcome to the Radical Store.', sender='aneeqahlotto@gmail.com',
+                # email_to_send = Message('Welcome to the Only Books.', sender='aneeqahlotto@gmail.com',
                 #                         recipients=[email])
                 # email_to_send.body = f"Congratulations {full_name} on a successful registration. \n\n" \
                 #                      f"Welcome to the Only books family, browse around and make sure to enjoy the " \
