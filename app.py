@@ -203,6 +203,7 @@ def user_registration():
                 response["current_user"] = user
                 response["message"] = "registration successful"
                 response["email_status"] = "Email was successfully sent"
+                return response
     except Exception as e:
         print(e.message)
         #   UPDATE THE response
@@ -210,6 +211,7 @@ def user_registration():
         response["current_user"] = "none"
         response["message"] = "inputs are not valid"
         response["email_status"] = "email not sent"
+        return response
     finally:
         #   RETURN THE response
         return response
