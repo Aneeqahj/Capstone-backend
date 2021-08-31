@@ -168,7 +168,7 @@ def user_registration():
             response["status_code"] = 201
             # Email IF the registration works
             if response["status_code"] == 201:
-                msg = Message("Hello Message", sender="huntermoonspear@gmail.com", recipients=[email])
+                msg = Message("Hello Message", sender="aneeqahlotto@gmail.com", recipients=[email])
                 msg.body = "My email using Flask"
                 mail.send(msg)
                 return "Message sent"
