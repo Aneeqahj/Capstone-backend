@@ -161,7 +161,7 @@ def user_registration():
 
             #   CALL THE get_user FUNCTION TO GET THE user
             user = get_user(username, password)
-
+            print(user)
             #   IF user EXISTS, THEN LOG THE IN
             if user:
                 response["status_code"] = 409
