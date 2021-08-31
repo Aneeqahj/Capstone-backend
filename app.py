@@ -172,6 +172,9 @@ def user_registration():
                 msg.body = "My email using Flask"
                 mail.send(msg)
                 return "Message sent"
+
+            return response
+
     # #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
     # response = {}
     #
