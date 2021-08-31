@@ -130,8 +130,8 @@ app = Flask(__name__)
 app.debug = True
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
-app.config['MAIL_USERNAME'] = 'notbrucewayne71@gmail.com'
-app.config['MAIL_PASSWORD'] = 'notBruceWayne'
+app.config['MAIL_USERNAME'] = 'aneeqahlotto@gmail.com'
+app.config['MAIL_PASSWORD'] = 'lotto2021'
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 
@@ -186,7 +186,7 @@ def user_registration():
                 # msg = Message('Success', sender='aneeqahlotto@gmail.com', recipients=[email])
                 # msg.body = "Your registration was successful."
                 # mail.send(msg)
-                email_to_send = Message('Welcome to the Only Books.', sender='notbrucewayne71@gmail.com',
+                email_to_send = Message('Welcome to the Only Books.', sender='aneeqahlotto@gmail.com',
                                         recipients=[email])
                 email_to_send.body = f"Congratulations {full_name} on a successful registration. \n\n" \
                                      f"Welcome to the Only books family, browse around and make sure to enjoy the " \
