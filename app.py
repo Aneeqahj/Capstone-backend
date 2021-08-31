@@ -178,22 +178,22 @@ def user_registration():
                                    "password) VALUES(?, ?, ?, ?)", (email, full_name, username, password))
                     connection.commit()
 
-                    global users
-                    users = fetch_users()
-                    print(users)
+                global users
+                users = fetch_users()
+                print(users)
 
-                    #   SEND THE USER AN EMAIL INFORMING THEM ABOUT THEIR REGISTRATION
-                    # msg = Message('Success', sender='aneeqahlotto@gmail.com', recipients=[email])
-                    # msg.body = "Your registration was successful."
-                    # mail.send(msg)
-                    email_to_send = Message('Welcome to the Radical Store.', sender='aneeqahlotto@gmail.com',
-                                            recipients=[email])
-                    email_to_send.body = f"Congratulations {full_name} on a successful registration. \n\n" \
-                                         f"Welcome to the Only books family, browse around and make sure to enjoy the " \
-                                         f"experience. "
+                #   SEND THE USER AN EMAIL INFORMING THEM ABOUT THEIR REGISTRATION
+                # msg = Message('Success', sender='aneeqahlotto@gmail.com', recipients=[email])
+                # msg.body = "Your registration was successful."
+                # mail.send(msg)
+                email_to_send = Message('Welcome to the Radical Store.', sender='aneeqahlotto@gmail.com',
+                                        recipients=[email])
+                email_to_send.body = f"Congratulations {full_name} on a successful registration. \n\n" \
+                                     f"Welcome to the Only books family, browse around and make sure to enjoy the " \
+                                     f"experience. "
 
-                    mail.send(email_to_send)
-                    response["description"] = "Message sent"
+                mail.send(email_to_send)
+                response["description"] = "Message sent"
 
                 #   GET THE NEWLY REGISTERED USER
                 user = get_user(username, password)
