@@ -11,16 +11,18 @@ from flask_jwt import JWT, jwt_required
 
 # Creating a class for the user
 class User(object):
-    def __init__(self, id, username, password):
+    def __init__(self, id, username, password, is_admin):
         self.id = id
         self.username = username
         self.password = password
+        self.is_admin = is_admin
 
 
 # database for the users
 def fetch_users():
-    with sqlite3.connect('database.db') as conn:
-        cursor = conn.cursor()
+    with sqlite3.connect('database.db') as connection:
+        connection.row_factory = dict_factory
+        cursor = connection.cursor()
         cursor.execute("SELECT * FROM user")
         users = cursor.fetchall()
 
@@ -28,14 +30,21 @@ def fetch_users():
 
         for data in users:
             print(data)
-            print(data[3])
-            print(data[4])
-            new_data.append(User(data[0], data[3], data[4]))
+            new_data.append(User(data["user_id"], data["username"], data["password"], data["is_admin"]))
     return new_data
+
+
+# This function create dictionaries out of SQL rows, so that the data follows JSON format
+def dict_factory(cursor, row):
+    d = {}
+    for idx, col in enumerate(cursor.description):
+        d[col[0]] = row[idx]
+    return d
 
 
 def get_user(username, password):
     with sqlite3.connect("database.db") as connection:
+        connection.row_factory = dict_factory
         cursor = connection.cursor()
         cursor.execute(f"SELECT * FROM user WHERE username = '{username}' AND password = '{password}'")
 
@@ -57,15 +66,16 @@ def identity(payload):
 
 # creating a  Database for users
 def init_user_table():
-    conn = sqlite3.connect('database.db')
+    connection = sqlite3.connect('database.db')
     print('Database opened successfully')
 
-    conn.execute("CREATE TABLE IF NOT EXISTS user("
-                 "user_id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                 "full_name TEXT NOT NULL,"
-                 "email TEXT NOT NULL,"
-                 "username TEXT NOT NULL,"
-                 "password TEXT NOT NULL)")
+    connection.execute("CREATE TABLE IF NOT EXISTS user("
+                       "user_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                       "full_name TEXT NOT NULL,"
+                       "email TEXT NOT NULL,"
+                       "username TEXT NOT NULL,"
+                       "password TEXT NOT NULL,"
+                       "is_admin TEXT NOT NULL)")
     print("user table created successfully")
 
 
@@ -79,16 +89,16 @@ class Review(object):
 
 # creating a  Database for reviews
 def init_review_table():
-    conn = sqlite3.connect('database.db')
+    connection = sqlite3.connect('database.db')
     print('Database opened successfully')
 
-    conn.execute("CREATE TABLE IF NOT EXISTS review(review_id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                 "user_id INTEGER NULL,"
-                 "review TEXT NOT NULL,"
-                 "date TEXT NOT NULL,"
-                 "book_id INTEGER NOT NULL,"
-                 "FOREIGN KEY (user_id) REFERENCES user(user_id),"
-                 "FOREIGN KEY (book_id) REFERENCES book(book_id))")
+    connection.execute("CREATE TABLE IF NOT EXISTS review(review_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                       "user_id INTEGER NULL,"
+                       "review TEXT NOT NULL,"
+                       "date TEXT NOT NULL,"
+                       "book_id INTEGER NOT NULL,"
+                       "FOREIGN KEY (user_id) REFERENCES user(user_id),"
+                       "FOREIGN KEY (book_id) REFERENCES book(book_id))")
     print("user table created successfully")
 
 
@@ -103,17 +113,17 @@ class Book(object):
 
 # Creating a database for books
 def init_book_table():
-    conn = sqlite3.connect('database.db')
+    connection = sqlite3.connect('database.db')
     print('Database opened successfully')
 
-    conn.execute("CREATE TABLE IF NOT EXISTS book("
-                 "book_id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                 "name TEXT NOT NULL,"
-                 "price TEXT NOT NULL,"
-                 "format TEXT NOT NULL,"
-                 "synopsis TEXT NOT NULL)")
+    connection.execute("CREATE TABLE IF NOT EXISTS book("
+                       "book_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                       "name TEXT NOT NULL,"
+                       "price TEXT NOT NULL,"
+                       "format TEXT NOT NULL,"
+                       "synopsis TEXT NOT NULL)")
     print("book table created successfully")
-    conn.close()
+    connection.close()
 
 
 init_user_table()
@@ -170,6 +180,7 @@ def user_registration():
             else:
                 #   CALL THE register_user FUNCTION TO REGISTER THE USER
                 with sqlite3.connect("database.db") as connection:
+                    connection.row_factory = dict_factory
                     cursor = connection.cursor()
                     cursor.execute("INSERT INTO user("
                                    "email,"
@@ -217,6 +228,48 @@ def user_registration():
         return response
 
 
+@app.route('/admin/', methods=["POST"])
+def admin():
+    #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
+    response = {}
+
+    try:
+        #   MAKE SURE THE request.method IS A POST
+        if request.method == "POST":
+            #   GET THE FORM DATA TO BE SAVED
+            email = request.json['email']
+            full_name = request.json['full_name']
+            username = request.json['username']
+            password = request.json['password']
+            is_admin = request.json['is_admin']
+
+            #   CALL THE register_user FUNCTION TO REGISTER THE USER
+            with sqlite3.connect("database.db") as connection:
+                connection.row_factory = dict_factory
+                cursor = connection.cursor()
+                cursor.execute("INSERT INTO user("
+                               "email,"
+                               "full_name,"
+                               "username,"
+                               "password,"
+                               "is_admin) VALUES(?, ?, ?, ?, ?)", (email, full_name, username, password, is_admin))
+                connection.commit()
+
+            global users
+            users = fetch_users()
+            print(users)
+
+            response["message"] = "admin created"
+
+            return response
+    except Exception as e:
+        print(e.message)
+        #   UPDATE THE response
+    finally:
+        #   RETURN THE response
+        return response
+
+
 # creating a route for adding a books
 @app.route('/adding/', methods=['POST'])
 @jwt_required()
@@ -231,6 +284,7 @@ def add_books():
             synopsis = request.json['synopsis']
 
             with sqlite3.connect("database.db") as connection:
+                connection.row_factory = dict_factory
                 cursor = connection.cursor()
                 cursor.execute("INSERT INTO book("
                                "name,"
@@ -256,6 +310,7 @@ def view_books():
         response = {}
 
         with sqlite3.connect("database.db") as connection:
+            connection.row_factory = dict_factory
             cursor = connection.cursor()
             cursor.execute("SELECT * FROM book")
 
@@ -277,6 +332,7 @@ def view_book(book_id):
         response = {}
 
         with sqlite3.connect("database.db") as connection:
+            connection.row_factory = dict_factory
             cursor = connection.cursor()
             cursor.execute("SELECT * FROM book WHERE book_id=?", str(book_id))
             products = cursor.fetchall()
@@ -299,47 +355,51 @@ def update_book(book_id):
         response = {}
 
         if request.method == "PUT":
-            with sqlite3.connect('database.db') as conn:
+            with sqlite3.connect('database.db') as connection:
                 print(request.json)
                 incoming_data = dict(request.json)
                 put_data = {}
 
                 if incoming_data.get("name") is not None:
                     put_data["name"] = incoming_data.get("name")
-                    with sqlite3.connect('database.db') as conn:
-                        cursor = conn.cursor()
+                    with sqlite3.connect('database.db') as connection:
+                        connection.row_factory = dict_factory
+                        cursor = connection.cursor()
                         cursor.execute("UPDATE book SET name =? WHERE book_id=?", (put_data["name"], book_id))
-                        conn.commit()
+                        connection.commit()
                         response['message'] = "Update was successful"
                         response['status_code'] = 200
 
                 elif incoming_data.get("price") is not None:
                     put_data["price"] = incoming_data.get("price")
-                    with sqlite3.connect('database.db') as conn:
-                        cursor = conn.cursor()
+                    with sqlite3.connect('database.db') as connection:
+                        connection.row_factory = dict_factory
+                        cursor = connection.cursor()
                         cursor.execute("UPDATE book SET price =? WHERE book_id=?",
                                        (put_data["price"], book_id))
-                        conn.commit()
+                        connection.commit()
                         response['message'] = "Update was successful"
                         response['status_code'] = 200
 
                 elif incoming_data.get("format") is not None:
                     put_data["format"] = incoming_data.get("format")
-                    with sqlite3.connect('database.db') as conn:
-                        cursor = conn.cursor()
+                    with sqlite3.connect('database.db') as connection:
+                        connection.row_factory = dict_factory
+                        cursor = connection.cursor()
                         cursor.execute("UPDATE book SET category =? WHERE book_id=?", (put_data["book"],
                                                                                        book_id))
-                        conn.commit()
+                        connection.commit()
                         response['message'] = "Update was successful"
                         response['status_code'] = 200
 
                 elif incoming_data.get("synopsis") is not None:
                     put_data["synopsis"] = incoming_data.get("synopsis")
-                    with sqlite3.connect('database.db') as conn:
-                        cursor = conn.cursor()
+                    with sqlite3.connect('database.db') as connection:
+                        connection.row_factory = dict_factory
+                        cursor = connection.cursor()
                         cursor.execute("UPDATE book SET synopsis =? WHERE book_id=?", (put_data["synopsis"],
                                                                                        book_id))
-                        conn.commit()
+                        connection.commit()
                         response['message'] = "Update was successful"
                         response['status_code'] = 200
                 return response
@@ -357,10 +417,11 @@ def delete_book(book_id):
     try:
         response = {}
 
-        with sqlite3.connect("database.db") as conn:
-            cursor = conn.cursor()
+        with sqlite3.connect("database.db") as connection:
+            connection.row_factory = dict_factory
+            cursor = connection.cursor()
             cursor.execute("DELETE FROM book WHERE book_id=" + str(book_id))
-            conn.commit()
+            connection.commit()
             response['status_code'] = 200
             response['message'] = "book deleted successfully."
         return response
@@ -388,6 +449,7 @@ def add_review():
             date_reviewed = today.strftime('%B %d, %Y')
 
             with sqlite3.connect("database.db") as connection:
+                connection.row_factory = dict_factory
                 cursor = connection.cursor()
                 "user_id INTEGER NULL,"
                 "review TEXT NOT NULL,"
@@ -417,6 +479,7 @@ def view_reviews():
         response = {}
 
         with sqlite3.connect("database.db") as connection:
+            connection.row_factory = dict_factory
             cursor = connection.cursor()
             cursor.execute("SELECT * FROM review")
 
@@ -438,6 +501,7 @@ def view_review(review_id):
         response = {}
 
         with sqlite3.connect("database.db") as connection:
+            connection.row_factory = dict_factory
             cursor = connection.cursor()
             cursor.execute("SELECT * FROM review WHERE review_id=?", str(review_id))
             products = cursor.fetchall()
@@ -459,10 +523,11 @@ def delete_review(review_id):
     try:
         response = {}
 
-        with sqlite3.connect("database.db") as conn:
-            cursor = conn.cursor()
+        with sqlite3.connect("database.db") as connection:
+            connection.row_factory = dict_factory
+            cursor = connection.cursor()
             cursor.execute("DELETE FROM review WHERE review_id=" + str(review_id))
-            conn.commit()
+            connection.commit()
             response['status_code'] = 200
             response['message'] = "book deleted successfully."
         return response
@@ -480,6 +545,7 @@ def view_user(user_id):
         response = {}
 
         with sqlite3.connect("database.db") as connection:
+            connection.row_factory = dict_factory
             cursor = connection.cursor()
             cursor.execute("SELECT * FROM user WHERE user_id=?", str(user_id))
             user = cursor.fetchall()
@@ -500,10 +566,11 @@ def delete_user(user_id):
     try:
         response = {}
 
-        with sqlite3.connect("database.db") as conn:
-            cursor = conn.cursor()
+        with sqlite3.connect("database.db") as connection:
+            connection.row_factory = dict_factory
+            cursor = connection.cursor()
             cursor.execute("DELETE FROM user WHERE user_id=" + str(user_id))
-            conn.commit()
+            connection.commit()
             response['status_code'] = 200
             response['message'] = "user deleted successfully."
         return response
