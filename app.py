@@ -191,9 +191,10 @@ def user_registration():
                     print("INSERT INTO user ( email, full_name, username, password, is_admin ) VALUES ( '" + email + "', '" + full_name + "', '" + username + "', '" + password + "' )")
                     cursor.execute("INSERT INTO user ( email, full_name, username, password, is_admin ) VALUES ( '" + email + "', '" + full_name + "', '" + username + "', '" + password + "', 'false' )")
                     connection.commit()
-                global users
-                users = fetch_users()
 
+                    global users
+                    users = fetch_users()
+                    print(users)
 
                 #   SEND THE USER AN EMAIL INFORMING THEM ABOUT THEIR REGISTRATION
                 # msg = Message('Success', sender='aneeqahlotto@gmail.com', recipients=[email])
@@ -228,6 +229,22 @@ def user_registration():
     finally:
         #   RETURN THE response
         return response
+
+
+@app.route("/get-users/")
+def get_users():
+    response = {}
+
+    #   CALL THE register_user FUNCTION TO REGISTER THE USER
+    with sqlite3.connect("database.db") as connection:
+        connection.row_factory = dict_factory
+        cursor = connection.cursor()
+        cursor.execute("SELECT * FROM user")
+
+        users = cursor.fetchall()
+        response["users"] = users
+
+    return response
 
 
 @app.route('/admin/', methods=["POST"])
