@@ -171,7 +171,6 @@ def user_registration():
 
             #   CALL THE get_user FUNCTION TO GET THE user
             user = get_user(username, password)
-            print(user)
             #   IF user EXISTS, THEN LOG THE IN
             if user:
                 response["status_code"] = 409
@@ -179,19 +178,22 @@ def user_registration():
                 response["email_status"] = "email not sent"
             else:
                 #   CALL THE register_user FUNCTION TO REGISTER THE USER
+                print("user")
+
                 with sqlite3.connect("database.db") as connection:
                     connection.row_factory = dict_factory
                     cursor = connection.cursor()
-                    cursor.execute("INSERT INTO user("
-                                   "email,"
-                                   "full_name,"
-                                   "username,"
-                                   "password) VALUES(?, ?, ?, ?)", (email, full_name, username, password))
+                    # cursor.execute("INSERT INTO user("
+                    #                "email,"
+                    #                "full_name,"
+                    #                "username,"
+                    #                "password) VALUES(?, ?, ?, ?)", (email, full_name, username, password))
+                    print("INSERT INTO user ( email, full_name, username, password, is_admin ) VALUES ( '" + email + "', '" + full_name + "', '" + username + "', '" + password + "' )")
+                    cursor.execute("INSERT INTO user ( email, full_name, username, password, is_admin ) VALUES ( '" + email + "', '" + full_name + "', '" + username + "', '" + password + "', 'false' )")
                     connection.commit()
-
                 global users
                 users = fetch_users()
-                print(users)
+
 
                 #   SEND THE USER AN EMAIL INFORMING THEM ABOUT THEIR REGISTRATION
                 # msg = Message('Success', sender='aneeqahlotto@gmail.com', recipients=[email])
