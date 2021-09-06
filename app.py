@@ -11,8 +11,8 @@ from flask_jwt import JWT, jwt_required
 
 # Creating a class for the user
 class User(object):
-    def __init__(self, user_id, username, password, is_admin):
-        self.user_id = user_id
+    def __init__(self, id, username, password, is_admin):
+        self.id = id
         self.username = username
         self.password = password
         self.is_admin = is_admin
