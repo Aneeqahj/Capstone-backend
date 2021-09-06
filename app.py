@@ -318,7 +318,7 @@ def admin():
 
 # creating a route for adding a books
 @app.route('/adding/', methods=['POST'])
-@jwt_required()
+# @jwt_required()
 def add_books():
     try:
         response = {}
@@ -395,7 +395,7 @@ def view_book(book_id):
 
 # creating a route to update books
 @app.route('/update/<int:book_id>/', methods=['PUT'])
-@jwt_required()
+# @jwt_required()
 def update_book(book_id):
     try:
         response = {}
@@ -458,7 +458,7 @@ def update_book(book_id):
 
 # creating a route to delete books
 @app.route('/delete_book/<int:book_id>/')
-@jwt_required()
+# @jwt_required()
 def delete_book(book_id):
     try:
         response = {}
@@ -481,7 +481,7 @@ def delete_book(book_id):
 # REVIEW TABLE FUNCTIONS
 # creating a route for adding reviews
 @app.route('/add/', methods=['POST'])
-@jwt_required()
+# @jwt_required()
 def add_review():
     try:
         response = {}
@@ -564,7 +564,7 @@ def view_review(review_id):
 
 # creating a route to delete reviews
 @app.route('/delete_review/<int:review_id>/')
-@jwt_required()
+# @jwt_required()
 def delete_review(review_id):
     try:
         response = {}
@@ -607,7 +607,7 @@ def view_user(user_id):
 
 
 @app.route('/delete_user/<int:user_id>/')
-@jwt_required()
+# @jwt_required()
 def delete_user(user_id):
     try:
         response = {}
