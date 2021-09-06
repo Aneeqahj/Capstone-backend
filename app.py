@@ -11,8 +11,8 @@ from flask_jwt import JWT, jwt_required
 
 # Creating a class for the user
 class User(object):
-    def __init__(self, id, username, password, is_admin):
-        self.id = id
+    def __init__(self, user_id, username, password, is_admin):
+        self.user_id = user_id
         self.username = username
         self.password = password
         self.is_admin = is_admin
@@ -59,7 +59,7 @@ def authenticate(username, password):
 
 
 # function for identity
-def identity(payload):
+def user_id(payload):
     user_id = payload['identity']
     return userid_table.get(user_id, None)
 
@@ -151,7 +151,7 @@ app.config['JWT_EXPIRATION_DELTA'] = timedelta(seconds=86400)
 app.config['SECRET_KEY'] = 'super-secret'
 CORS(app)
 
-jwt = JWT(app, authenticate, identity)
+jwt = JWT(app, authenticate, user_id)
 
 
 # creating a route for registration
