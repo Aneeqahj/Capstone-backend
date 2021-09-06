@@ -247,6 +247,33 @@ def get_users():
     return response
 
 
+@app.route("/user-login/", methods=["POST"])
+def login():
+    response = {}
+
+    if request.method == "POST":
+
+        username = request.json['username']
+        password = request.json['password']
+
+        with sqlite3.connect("database.db") as conn:
+            cursor = conn.cursor()
+            print(f"SELECT * FROM user WHERE username = '{username}' AND password = '{password}'")
+            cursor.execute(f"SELECT * FROM user WHERE username = '{username}' AND password = '{password}'")
+            user_information = cursor.fetchone()
+
+        if user_information:
+            response["user_info"] = user_information
+            response["message"] = "Success"
+            response["status_code"] = 201
+            return jsonify(response)
+
+        else:
+            response['message'] = "Login Unsuccessful, please try again"
+            response['status_code'] = 401
+            return jsonify(response)
+
+
 @app.route('/admin/', methods=["POST"])
 def admin():
     #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
