@@ -59,7 +59,7 @@ def authenticate(username, password):
 
 
 # function for identity
-def user_id(payload):
+def identity(payload):
     user_id = payload['identity']
     return userid_table.get(user_id, None)
 
@@ -151,7 +151,7 @@ app.config['JWT_EXPIRATION_DELTA'] = timedelta(seconds=86400)
 app.config['SECRET_KEY'] = 'super-secret'
 CORS(app)
 
-jwt = JWT(app, authenticate, user_id)
+jwt = JWT(app, authenticate, identity)
 
 
 # creating a route for registration
