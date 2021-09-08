@@ -1,9 +1,10 @@
 #  All Imports
 import hmac
 import sqlite3
+import cloudinary.uploader
 from datetime import timedelta, date
 
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 from flask import Flask, request, jsonify
 from flask_mail import Mail, Message
 from flask_jwt import JWT, jwt_required
@@ -188,8 +189,10 @@ def user_registration():
                     #                "full_name,"
                     #                "username,"
                     #                "password) VALUES(?, ?, ?, ?)", (email, full_name, username, password))
-                    print("INSERT INTO user ( email, full_name, username, password, is_admin ) VALUES ( '" + email + "', '" + full_name + "', '" + username + "', '" + password + "' )")
-                    cursor.execute("INSERT INTO user ( email, full_name, username, password, is_admin ) VALUES ( '" + email + "', '" + full_name + "', '" + username + "', '" + password + "', 'false' )")
+                    print(
+                        "INSERT INTO user ( email, full_name, username, password, is_admin ) VALUES ( '" + email + "', '" + full_name + "', '" + username + "', '" + password + "' )")
+                    cursor.execute(
+                        "INSERT INTO user ( email, full_name, username, password, is_admin ) VALUES ( '" + email + "', '" + full_name + "', '" + username + "', '" + password + "', 'false' )")
                     connection.commit()
 
                     global users
@@ -258,7 +261,6 @@ def login():
 
         with sqlite3.connect("database.db") as conn:
             cursor = conn.cursor()
-            print(f"SELECT * FROM user WHERE username = '{username}' AND password = '{password}'")
             cursor.execute(f"SELECT * FROM user WHERE username = '{username}' AND password = '{password}'")
             user_information = cursor.fetchone()
 
@@ -272,6 +274,27 @@ def login():
             response['message'] = "Login Unsuccessful, please try again"
             response['status_code'] = 401
             return jsonify(response)
+
+
+@app.route("/upload", methods=['POST'])
+@cross_origin()
+def upload_file():
+    app.logger.info('in upload route')
+
+    cloudinary.config(
+        cloud_name='aneeqahj.',
+        api_key='963465549747351',
+        api_secret='GPklDasHYQD_T_fFSEnFv0267Y8'
+    )
+    upload_result = None
+    if request.method == 'POST':
+        file_to_upload = request.files['file']
+        app.logger.info('%s file_to_upload', file_to_upload)
+        if file_to_upload:
+            upload_result = cloudinary.uploader.upload(file_to_upload)
+            app.logger.info(upload_result)
+
+            return jsonify(upload_result)
 
 
 @app.route('/admin/', methods=["POST"])
