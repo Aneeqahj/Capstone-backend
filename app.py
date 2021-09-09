@@ -122,7 +122,8 @@ def init_book_table():
                        "book_id INTEGER PRIMARY KEY AUTOINCREMENT,"
                        "name TEXT NOT NULL,"
                        "price TEXT NOT NULL,"
-                       "format TEXT NOT NULL,"
+                       "format TEXT NOT NULL, "
+                       "image_url TEXT DEFAULT 'NULL' NOT NULL,"
                        "synopsis TEXT NOT NULL)")
     print("book table created successfully")
     connection.close()
@@ -352,6 +353,22 @@ def add_books():
             price = request.json['price']
             format = request.json['format']
             synopsis = request.json['synopsis']
+            image = request.json['image']
+
+            print(request.json)
+
+            cloudinary.config(
+                cloud_name='aneeqahj.',
+                api_key='963465549747351',
+                api_secret='GPklDasHYQD_T_fFSEnFv0267Y8'
+            )
+
+            upload_result = None
+            app.logger.info("%s file_to_upload", image)
+
+            if image:
+                upload_result = cloudinary.uploader.upload(image)  # Upload results
+                app.logger.info(upload_result)
 
             with sqlite3.connect("database.db") as connection:
                 connection.row_factory = dict_factory
@@ -360,9 +377,11 @@ def add_books():
                                "name,"
                                "price,"
                                "format,"
-                               "synopsis"
-                               ") VALUES(?, ?, ?, ?)", (name, price, format, synopsis))
+                               "synopsis,"
+                               "image"
+                               ") VALUES(?, ?, ?, ?, ?)", (name, price, format, synopsis, upload_result["url"]))
                 connection.commit()
+
                 response["message"] = "success"
                 response["status_code"] = 201
             return response
