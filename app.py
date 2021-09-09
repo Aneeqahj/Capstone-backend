@@ -1,6 +1,7 @@
 #  All Imports
 import hmac
 import sqlite3
+import cloudinary
 import cloudinary.uploader
 from datetime import timedelta, date
 
