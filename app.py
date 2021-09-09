@@ -123,7 +123,7 @@ def init_book_table():
                        "name TEXT NOT NULL,"
                        "price TEXT NOT NULL,"
                        "format TEXT NOT NULL, "
-                       "image_url TEXT DEFAULT 'NULL' NOT NULL,"
+                       "image_url TEXT NOT NULL,"
                        "synopsis TEXT NOT NULL)")
     print("book table created successfully")
     connection.close()
@@ -278,27 +278,6 @@ def login():
             return jsonify(response)
 
 
-@app.route("/upload", methods=['POST'])
-@cross_origin()
-def upload_file():
-    app.logger.info('in upload route')
-
-    cloudinary.config(
-        cloud_name='aneeqahj.',
-        api_key='963465549747351',
-        api_secret='GPklDasHYQD_T_fFSEnFv0267Y8'
-    )
-    upload_result = None
-    if request.method == 'POST':
-        file_to_upload = request.files['file']
-        app.logger.info('%s file_to_upload', file_to_upload)
-        if file_to_upload:
-            upload_result = cloudinary.uploader.upload(file_to_upload)
-            app.logger.info(upload_result)
-
-            return jsonify(upload_result)
-
-
 @app.route('/admin/', methods=["POST"])
 def admin():
     #   CREATE AN EMPTY OBJECT THAT WILL HOLD THE response OF THE PROCESS
@@ -353,22 +332,7 @@ def add_books():
             price = request.json['price']
             format = request.json['format']
             synopsis = request.json['synopsis']
-            image = request.json['image']
-
-            print(request.json)
-
-            cloudinary.config(
-                cloud_name='aneeqahj.',
-                api_key='963465549747351',
-                api_secret='GPklDasHYQD_T_fFSEnFv0267Y8'
-            )
-
-            upload_result = None
-            app.logger.info("%s file_to_upload", image)
-
-            if image:
-                upload_result = cloudinary.uploader.upload(image)  # Upload results
-                app.logger.info(upload_result)
+            url = request.json['image_url']
 
             with sqlite3.connect("database.db") as connection:
                 connection.row_factory = dict_factory
@@ -378,8 +342,8 @@ def add_books():
                                "price,"
                                "format,"
                                "synopsis,"
-                               "image"
-                               ") VALUES(?, ?, ?, ?, ?)", (name, price, format, synopsis, upload_result["url"]))
+                               "image_url"
+                               ") VALUES(?, ?, ?, ?, ?)", (name, price, format, synopsis, url))
                 connection.commit()
 
                 response["message"] = "success"
