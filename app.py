@@ -411,59 +411,31 @@ def update_book(book_id):
         response = {}
 
         if request.method == "PUT":
+            print(request.json)
+            name = request.json['name']
+            price = request.json['price']
+            format = request.json['format']
+            genre = request.json['genre']
+            synopsis = request.json['synopsis']
+            url = request.json['image_url']
+
             with sqlite3.connect('database.db') as connection:
-                print(request.json)
-                incoming_data = dict(request.json)
-                put_data = {}
+                connection.row_factory = dict_factory
+                cursor = connection.cursor()
+                print(f"UPDATE book SET name = '{name}', price = '{price}', format = '{format}', "
+                      f"genre = '{genre}', synopsis = '{synopsis}', image_url = '{url}' "
+                               f" WHERE book_id = '{book_id}'")
+                cursor.execute(f"UPDATE book SET name = '{name}', price = '{price}', format = '{format}', genre = '{genre}', synopsis = '{synopsis}', image_url = '{url}' "
+                               f" WHERE book_id = '{book_id}'")
+                connection.commit()
 
-                if incoming_data.get("name") is not None:
-                    put_data["name"] = incoming_data.get("name")
-                    with sqlite3.connect('database.db') as connection:
-                        connection.row_factory = dict_factory
-                        cursor = connection.cursor()
-                        cursor.execute("UPDATE book SET name =? WHERE book_id=?", (put_data["name"], book_id))
-                        connection.commit()
-                        response['message'] = "Update was successful"
-                        response['status_code'] = 200
-
-                elif incoming_data.get("price") is not None:
-                    put_data["price"] = incoming_data.get("price")
-                    with sqlite3.connect('database.db') as connection:
-                        connection.row_factory = dict_factory
-                        cursor = connection.cursor()
-                        cursor.execute("UPDATE book SET price =? WHERE book_id=?",
-                                       (put_data["price"], book_id))
-                        connection.commit()
-                        response['message'] = "Update was successful"
-                        response['status_code'] = 200
-
-                elif incoming_data.get("format") is not None:
-                    put_data["format"] = incoming_data.get("format")
-                    with sqlite3.connect('database.db') as connection:
-                        connection.row_factory = dict_factory
-                        cursor = connection.cursor()
-                        cursor.execute("UPDATE book SET category =? WHERE book_id=?", (put_data["book"],
-                                                                                       book_id))
-                        connection.commit()
-                        response['message'] = "Update was successful"
-                        response['status_code'] = 200
-
-                elif incoming_data.get("synopsis") is not None:
-                    put_data["synopsis"] = incoming_data.get("synopsis")
-                    with sqlite3.connect('database.db') as connection:
-                        connection.row_factory = dict_factory
-                        cursor = connection.cursor()
-                        cursor.execute("UPDATE book SET synopsis =? WHERE book_id=?", (put_data["synopsis"],
-                                                                                       book_id))
-                        connection.commit()
-                        response['message'] = "Update was successful"
-                        response['status_code'] = 200
-                return response
+                response['message'] = "Update was successful"
+                response['status_code'] = 200
     except:
-        response["message"] = "Enter correct details"
+        response["message"] = "Update was unsuccessful"
         response["description"] = Exception
 
-        return response
+    return response
 
 
 # creating a route to delete books
