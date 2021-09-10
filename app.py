@@ -123,7 +123,8 @@ def init_book_table():
                        "name TEXT NOT NULL,"
                        "price TEXT NOT NULL,"
                        "format TEXT NOT NULL, "
-                       "image_url TEXT NOT NULL,"
+                       "genre TEXT NOT NULL, "
+                       "image_url TEXT NOT NULL, "
                        "synopsis TEXT NOT NULL)")
     print("book table created successfully")
     connection.close()
@@ -331,6 +332,7 @@ def add_books():
             name = request.json['name']
             price = request.json['price']
             format = request.json['format']
+            genre = request.json['genre']
             synopsis = request.json['synopsis']
             url = request.json['image_url']
 
@@ -340,10 +342,11 @@ def add_books():
                 cursor.execute("INSERT INTO book("
                                "name,"
                                "price,"
+                               "genre,"
                                "format,"
                                "synopsis,"
                                "image_url"
-                               ") VALUES(?, ?, ?, ?, ?)", (name, price, format, synopsis, url))
+                               ") VALUES(?, ?, ?, ?, ?, ?)", (name, price, genre, format, synopsis, url))
                 connection.commit()
 
                 response["message"] = "success"
