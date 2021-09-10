@@ -390,8 +390,8 @@ def view_book(book_id):
         with sqlite3.connect("database.db") as connection:
             connection.row_factory = dict_factory
             cursor = connection.cursor()
-            cursor.execute("SELECT * FROM book WHERE book_id=?", str(book_id))
-            products = cursor.fetchall()
+            cursor.execute(f"SELECT * FROM book WHERE book_id='{book_id}'")
+            products = cursor.fetchone()
 
         response['status_code'] = 200
         response['data'] = products
